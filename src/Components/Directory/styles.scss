@@ -1,0 +1,27 @@
+.warp {
+  display: flex;
+}
+.item {
+  position: relative;
+  height: 91vh;
+  width: 50vw;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-color: black;
+  opacity: 0.9;
+}
+.shopbutton {
+  position: absolute;
+  top: 50%;
+  left: 38%;
+  z-index: 2;
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 600;
+  background: white;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  border: 1px solid brown;
+  border-radius: 10px;
+}
