@@ -1,10 +1,9 @@
 import React from "react";
 import Directory from "../../Components/Directory";
-import "./styles.scss";
 
 const Homepage = (props) => {
   return (
-    <section className="homepage">
+    <section style={{ height: "100%" }}>
       <Directory />
     </section>
   );

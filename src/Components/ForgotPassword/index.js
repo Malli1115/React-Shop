@@ -1,76 +1,68 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import AuthWrapper from "../AuthWrapper";
 import FormInput from "./../Forms/FormInput";
 import Button from "./../Forms/Button";
 import { auth } from "./../../Firebase/utils";
+import {
+  forgotPasswordUser,
+  resetAllAuthForms,
+} from "../../Redux/User/User.action";
+import { useNavigate } from "react-router-dom";
 
-const initialState = {
-  email: "",
-  serverErr: "",
-};
+const mapState = ({ user }) => ({
+  forgotPasswordSuccess: user.forgotPasswordSuccess,
+  forgotPasswordError: user.forgotPasswordError,
+});
 
-class ForgotPassword extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      ...initialState,
-    };
-  }
-  handleChange = (e) => {
-    const { name, value } = e.target;
-    this.setState({
-      [name]: value,
-    });
-  };
+const ForgotPassword = (props) => {
+  const { forgotPasswordSuccess, forgotPasswordError } = useSelector(mapState);
+  const dispatchFromForgotPassword = useDispatch();
+  const [email, setEmail] = useState("");
+  const [errors, setErrors] = useState([]);
+  const navigate = useNavigate();
 
-  handleEmailSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      const { email } = this.state;
-      const config = {
-        url: "http://localhost:3000/login",
-      };
-      await auth
-        .sendPasswordResetEmail(email, config)
-        .then(() => {
-          this.props.history.replace("/login");
-        })
-        .catch(() => {
-          this.setState({
-            serverErr: "Email not found !",
-          });
-        });
-    } catch (err) {
-      console.log(err);
+  useEffect(() => {
+    if (forgotPasswordSuccess) {
+      dispatchFromForgotPassword(resetAllAuthForms());
+      navigate("/login");
     }
+  }, [forgotPasswordSuccess]);
+
+  useEffect(() => {
+    if (Array.isArray(forgotPasswordError) && forgotPasswordError.length > 0) {
+      setErrors(forgotPasswordError);
+    }
+  }, [forgotPasswordError]);
+
+  const handleEmailSubmit = (e) => {
+    e.preventDefault();
+    dispatchFromForgotPassword(forgotPasswordUser({ email }));
   };
 
-  render() {
-    const { email, serverErr } = this.state;
-
-    return (
-      <AuthWrapper headLine="Reset Password">
-        {serverErr ? (
-          <ul>
-            <li style={{ paddingBottom: "7px" }}>{serverErr}</li>
-          </ul>
-        ) : null}
-        <div className="formWrap">
-          <form onSubmit={this.handleEmailSubmit}>
-            <FormInput
-              type="email"
-              name="email"
-              value={email}
-              placeholder="Register Email"
-              onChange={this.handleChange}
-            />
-            <Button type="submit">Submit</Button>
-          </form>
-        </div>
-      </AuthWrapper>
-    );
-  }
-}
+  return (
+    <AuthWrapper headLine="Reset Password">
+      {errors.length > 0 && (
+        <ul>
+          {errors.map((err, index) => {
+            return <li key={index}>{err}</li>;
+          })}
+        </ul>
+      )}
+      <div className="formWrap">
+        <form onSubmit={handleEmailSubmit}>
+          <FormInput
+            type="email"
+            name="email"
+            value={email}
+            placeholder="Register Email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Button type="submit">Submit</Button>
+        </form>
+      </div>
+    </AuthWrapper>
+  );
+};
 
 export default ForgotPassword;

@@ -1,73 +1,64 @@
-import React, { Component } from "react";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { auth, handleUserProfile } from "./Firebase/utils";
-import Header from "./Components/Header";
+import { setCurrentUser } from "./Redux/User/User.action";
+
 import "./default.scss";
+import Header from "./Components/Header";
 import Homepage from "./Pages/Homepage";
 import Login from "./Pages/Login";
 import Registration from "./Pages/Registration";
 import Recovery from "./Pages/Recovery";
+import Dashboard from "./Pages/Dashboard";
 
-const initialState = {
-  currentUser: null,
-};
+//Hoc
+import WithAuth from "./Hoc/WithAuth";
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      ...initialState,
-    };
-  }
-  authListener = null;
+const App = (props) => {
+  const dispatchFromApp = useDispatch();
 
-  componentDidMount() {
-    this.authListener = auth.onAuthStateChanged(async (userAuth) => {
+  useEffect(() => {
+    const authListener = auth.onAuthStateChanged(async (userAuth) => {
       if (userAuth) {
         const userRef = await handleUserProfile(userAuth);
         userRef.onSnapshot((snapshot) => {
-          this.setState({
-            currentUser: {
+          dispatchFromApp(
+            setCurrentUser({
               id: snapshot.id,
               ...snapshot.data(),
-            },
-          });
+            })
+          );
         });
       }
-
-      this.setState({
-        ...initialState,
-      });
+      dispatchFromApp(setCurrentUser(userAuth));
     });
-  }
-  componentWillUnmount() {
-    this.authListener();
-  }
+    return () => {
+      authListener();
+    };
+  }, []);
 
-  render() {
-    const { currentUser } = this.state;
-    return (
-      <div className="App">
-        <Header currentUser={currentUser} />
-        <div className="main">
-          <Routes>
-            <Route exact path="/" element={<Homepage />} />
-            <Route
-              path="/registration"
-              element={
-                currentUser ? <Navigate replace to="/" /> : <Registration />
-              }
-            />
-            <Route
-              path="/login"
-              element={currentUser ? <Navigate replace to="/" /> : <Login />}
-            />
-            <Route path="/forgot" element={<Recovery />} />
-          </Routes>
-        </div>
+  return (
+    <div className="App">
+      <Header />
+      <div className="main">
+        <Routes>
+          <Route exact path="/" element={<Homepage />} />
+          <Route path="/registration" element={<Registration />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot" element={<Recovery />} />
+          <Route
+            path="/dashboard"
+            element={
+              <WithAuth>
+                <Dashboard />
+              </WithAuth>
+            }
+          />
+        </Routes>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default App;
